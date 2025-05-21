@@ -61,10 +61,10 @@ app.post('/register', async (req, res) => {
         errors.push({ field: 'email', message: 'Please provide a valid email' });
       } else {
         // Check if email already exists
-        const existingUser = await connection('users').where({ email: email.toLowerCase().trim() }).first();
-        if (existingUser) {
-          errors.push({ field: 'email', message: 'Email already in use' });
-        }
+        // const existingUser = await connection('users').where({ email: email.toLowerCase().trim() }).first();
+        // if (existingUser) {
+        //   errors.push({ field: 'email', message: 'Email already in use' });
+        // }
       }
     }
     
@@ -74,13 +74,13 @@ app.post('/register', async (req, res) => {
       errors.push({ field: 'password', message: 'Password must be at least 8 characters long' });
     } else {
       // Check password complexity
-      const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/;
-      if (!passwordRegex.test(password)) {
-        errors.push({ 
-          field: 'password', 
-          message: 'Password must include one uppercase letter, one lowercase letter, one number, and one special character' 
-        });
-      }
+      // const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/;
+      // if (!passwordRegex.test(password)) {
+      //   errors.push({ 
+      //     field: 'password', 
+      //     message: 'Password must include one uppercase letter, one lowercase letter, one number, and one special character' 
+      //   });
+      // }
     }
 
     // Return validation errors if any
@@ -93,7 +93,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Insert user into database using Knex
-    const [result] = await connection('users').insert({
+    await connection('users').insert({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       email: email.toLowerCase().trim(),
@@ -103,15 +103,7 @@ app.post('/register', async (req, res) => {
     }).returning('user_id');
 
     // Return success response
-    res.status(201).json({
-      message: 'User registered successfully',
-      user: {
-        userId: result.user_id,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.toLowerCase().trim()
-      }
-    });
+    res.status(201).end();
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error during registration' });
