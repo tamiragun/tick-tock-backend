@@ -5,7 +5,7 @@ info:
     This is an API that interacts with the user-facing app of Tick Tock.
   version: 1.0.12
 servers:
-  - url: http://localhost:3000
+  - url: https://jiypepwmdk.eu-west-1.awsapprunner.com
 paths:
   /register:
     post:
