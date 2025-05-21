@@ -24,9 +24,7 @@ export const setupDb = async (connection) => {
 
     } catch (error) {
         console.log(error);
-    } finally {
-        await connection.destroy();
-    }
+    } 
 };
 
 

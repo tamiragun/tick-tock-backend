@@ -1,0 +1,52 @@
+openapi: 3.0.4
+info:
+  title: Tick-Tock
+  description: |-
+    This is an API that interacts with the user-facing app of Tick Tock.
+  version: 1.0.12
+servers:
+  - url: http://localhost:3000
+paths:
+  /register:
+    post:
+      tags:
+        - register
+      summary: Add a new user.
+      requestBody:
+        description: Create a new user by providing first name, last name, email address, and password.
+        
+        content:
+        
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        '201':
+          description: successful operation
+        '400':
+          description: Invalid input
+        '500':
+          description: Unexpected error
+    
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: 'The first name of the user'
+          example: 'Timi'
+        lastName:
+          type: string
+          description: 'The last name of the user'
+          example: 'Gun'
+        email:
+          type: string
+          description: 'The email address of the user'
+          example: 'timigun@test.com'
+        password:
+          type: string
+          description: 'The password of the user'
+          example: 'tickT0ck#'
