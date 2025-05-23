@@ -16,14 +16,18 @@ connection = knex(config);
 await setupDb(connection);
 
 // Graceful shutdown handling
-const shutdown = () => {
+const shutdown = async () => {
   console.log('Received kill signal, shutting down gracefully');
   
   // No need to explicitly close SQLite connections
   // but we should still destroy the knex instance for clean shutdown
-  connection.destroy().then(() => {
+  connection.destroy()
+  .then(() => {
     console.log('Database connections closed');
-    process.exit(0);
+    app.close(() => {
+      console.log("HTTP server closed");
+      process.exit(0);
+    })
   }).catch((err) => {
     console.error('Error closing database connections:', err);
     process.exit(1);

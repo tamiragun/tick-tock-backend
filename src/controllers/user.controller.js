@@ -3,6 +3,7 @@ import { createUser } from '../services/user.service.js';
 export const register = async (req, res, next) => {
     try {
         const user = await createUser(req.body);
+        console.log("User added");
         res.status(201).json({
             message: 'User registered successfully',
             user
