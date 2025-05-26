@@ -1,4 +1,4 @@
-import express, { json, urlencoded } from 'express';
+import express, { urlencoded } from 'express';
 import routes from './routes/index.js';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';

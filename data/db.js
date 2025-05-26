@@ -18,6 +18,7 @@ export const setupDb = async (connection) => {
         await connection.schema.createTable('clients', table => {
             table.increments('client_id');
             table.integer('user_id').notNullable();
+            table.string('company_name').notNullable();
             table.foreign('user_id').references('user_id').inTable('users');
             table.timestamp('created_at').notNullable();
         });

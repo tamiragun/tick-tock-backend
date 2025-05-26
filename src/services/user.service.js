@@ -12,6 +12,7 @@ const config = {
 connection = knex(config);
 
 export const createUser = async (userData) => {
+  try {
   // Validation, password hashing, database operations
   // Return user without sensitive data
   const { firstName, lastName, email, password } = userData;
@@ -67,7 +68,7 @@ export const createUser = async (userData) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Insert user into database using Knex
-    await connection('users').insert({
+    const [result] = await connection('users').insert({
       first_name: firstName.trim(),
       last_name: lastName.trim(),
       email: email.toLowerCase().trim(),
@@ -75,6 +76,11 @@ export const createUser = async (userData) => {
       user_role: "user",
       created_at: new Date()
     }).returning('user_id');
+
+    return { success: true, userId: result.user_id };
+  } catch (error) {
+    throw new Error(`Database error: ${error.message}`);
+  }
 }
 
 export const findUserByEmail = async (email) => {
