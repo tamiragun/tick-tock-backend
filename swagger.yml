@@ -5,22 +5,24 @@ info:
     This is an API that interacts with the user-facing app of Tick Tock.
   version: 1.0.12
 servers:
+  - url: http://localhost:3000/api
+    description: Development server
   - url: https://jiypepwmdk.eu-west-1.awsapprunner.com/api
+    description: Production server
 paths:
   /users/register:
     post:
       tags:
         - register
-      summary: Add a new user.
+      summary: Add a new user
+      description: Create a new user by providing first name, last name, email address, and password.
+      operationId: registerUser
       requestBody:
-        description: Create a new user by providing first name, last name, email address, and password.
-        
+        required: true
         content:
-        
           application/json:
             schema:
               $ref: '#/components/schemas/User'
-        required: true
       responses:
         '201':
           description: successful operation
@@ -28,6 +30,100 @@ paths:
           description: Invalid input
         '500':
           description: Unexpected error
+  /users/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate a user with email and password credentials
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              valid_login:
+                summary: Valid login credentials
+                value:
+                  email: "user@example.com"
+                  password: "securePassword123"
+              invalid_email:
+                summary: Invalid email format
+                value:
+                  email: "invalid-email"
+                  password: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessResponse'
+              examples:
+                with_token:
+                  summary: Successful login with JWT token
+                  value:
+                    success: true
+                    message: "Login successful"
+                    user:
+                      id: 1
+                      email: "user@example.com"
+                      name: "John Doe"
+                      created_at: "2024-01-15T10:30:00Z"
+                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                without_token:
+                  summary: Successful login without JWT token
+                  value:
+                    success: true
+                    message: "Login successful"
+                    user:
+                      id: 1
+                      email: "user@example.com"
+                      name: "John Doe"
+                      created_at: "2024-01-15T10:30:00Z"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_fields:
+                  summary: Missing required fields
+                  value:
+                    success: false
+                    message: "Email and password are required"
+                invalid_email:
+                  summary: Invalid email format
+                  value:
+                    success: false
+                    message: "Please provide a valid email address"
+        '401':
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_credentials:
+                  summary: Invalid email or password
+                  value:
+                    success: false
+                    message: "Invalid email or password"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                server_error:
+                  summary: Internal server error
+                  value:
+                    success: false
+                    message: "Internal server error"
     
 components:
   schemas:
@@ -50,3 +146,58 @@ components:
           type: string
           description: 'The password of the user'
           example: 'tickT0ck#'
+  
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+          minLength: 5
+          maxLength: 255
+        password:
+          type: string
+          description: User's password
+          example: "securePassword123"
+          minLength: 6
+          maxLength: 128
+      additionalProperties: false
+
+    LoginSuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+        - user
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the login was successful
+          example: true
+        message:
+          type: string
+          description: Success message
+          example: "Login successful"
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: JWT token (optional, only if JWT_SECRET is configured)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      additionalProperties: false
+
+  securitySchemes:
+      BearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
+        description: JWT token obtained from login endpoint
+
+tags:
+  - name: Authentication
+    description: User authentication operations
