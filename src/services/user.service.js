@@ -1,5 +1,5 @@
 import knex from 'knex';
-import { hash } from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 let connection;
 const config = {
@@ -64,7 +64,7 @@ export const createUser = async (userData) => {
 
     // Hash the password
     const saltRounds = 10;
-    const hashedPassword = await hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Insert user into database using Knex
     await connection('users').insert({
@@ -76,3 +76,52 @@ export const createUser = async (userData) => {
       created_at: new Date()
     }).returning('user_id');
 }
+
+export const findUserByEmail = async (email) => {
+  try {
+    const user = await connection('users')
+      .where({ email })
+      .first();
+    return user;
+  } catch (error) {
+    throw new Error(`Database error: ${error.message}`);
+  }
+};
+
+export const validatePassword = async (plainPassword, hashedPassword) => {
+  try {
+    return await bcrypt.compare(plainPassword, hashedPassword);
+  } catch (error) {
+    throw new Error(`Password validation error: ${error.message}`);
+  }
+};
+
+export const authenticateUser = async (email, password) => {
+  try {
+    // Find user by email
+    const user = await findUserByEmail(email);
+    
+    if (!user) {
+      return { success: false, message: 'Invalid email or password' };
+    }
+
+    // Validate password
+    const isPasswordValid = await validatePassword(password, user.password);
+    
+    if (!isPasswordValid) {
+      return { success: false, message: 'Invalid email or password' };
+    }
+
+    // Remove password from user object before returning
+    const { password: _, ...userWithoutPassword } = user;
+    
+    console.log("Logged in");
+    return { 
+      success: true, 
+      message: 'Login successful',
+      user: userWithoutPassword 
+    };
+  } catch (error) {
+    throw new Error(`Authentication error: ${error.message}`);
+  }
+};
