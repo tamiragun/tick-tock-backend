@@ -8,13 +8,24 @@ import cors from 'cors';
 
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: ['http://localhost:3000', 'https://jiypepwmdk.eu-west-1.awsapprunner.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
+// CORS configuration based on environment
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
+const corsOptions = isDevelopment
+  ? {
+      // In development, allow all origins
+      origin: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+    }
+  : {
+      // In production, restrict to specific origins
+      origin: ['https://jiypepwmdk.eu-west-1.awsapprunner.com'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true
+    };
 
 // Enable CORS
 app.use(cors(corsOptions));
