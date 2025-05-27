@@ -35,6 +35,17 @@ export const setupDb = async (connection) => {
             table.timestamp('created_at').notNullable();
         });
 
+        await connection.schema.dropTableIfExists('sessions');
+        await connection.schema.createTable('sessions', table => {
+            table.increments('session_id');
+            table.timestamp('started_at').notNullable();
+            table.timestamp('ended_at');
+            table.integer('duration');
+            table.integer('project_id').notNullable();
+            table.foreign('project_id').references('project_id').inTable('projects');
+            table.timestamp('created_at').notNullable();
+        });
+
     } catch (error) {
         console.log(error);
     } 
