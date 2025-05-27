@@ -13,27 +13,25 @@ connection = knex(config);
 
 export const createUser = async (userData) => {
   try {
-  // Validation, password hashing, database operations
-  // Return user without sensitive data
-  const { firstName, lastName, email, password } = userData;
-  const errors = [];
+    const { firstName, lastName, email, password } = userData;
+    const errors = [];
 
     // Validation
     if (!firstName || firstName.trim() === '') {
-      errors.push({ field: 'firstName', message: 'First name is required' });
+      errors.push('First name is required');
     }
     
     if (!lastName || lastName.trim() === '') {
-      errors.push({ field: 'lastName', message: 'Last name is required' });
+      errors.push('Last name is required');
     }
     
     if (!email || email.trim() === '') {
-      errors.push({ field: 'email', message: 'Email is required' });
+      errors.push('Email is required');
     } else {
       // Basic email validation using regex
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        errors.push({ field: 'email', message: 'Please provide a valid email' });
+        errors.push('Please provide a valid email');
       } else {
         // Check if email already exists
         // const existingUser = await connection('users').where({ email: email.toLowerCase().trim() }).first();
@@ -44,9 +42,9 @@ export const createUser = async (userData) => {
     }
     
     if (!password) {
-      errors.push({ field: 'password', message: 'Password is required' });
+      errors.push('Password is required');
     } else if (password.length < 8) {
-      errors.push({ field: 'password', message: 'Password must be at least 8 characters long' });
+      errors.push('Password must be at least 8 characters long');
     } else {
       // Check password complexity
       // const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/;
@@ -60,7 +58,7 @@ export const createUser = async (userData) => {
 
     // Return validation errors if any
     if (errors.length > 0) {
-      return res.status(400).json({ errors });
+      throw new Error(`Validation failed: ${errors.join(', ')}`);
     }
 
     // Hash the password
@@ -77,8 +75,12 @@ export const createUser = async (userData) => {
       created_at: new Date()
     }).returning('user_id');
 
+    console.log("User added successfully");
     return { success: true, userId: result.user_id };
   } catch (error) {
+    if (error.message.startsWith('Validation failed:')) {
+      throw error;
+    }
     throw new Error(`Database error: ${error.message}`);
   }
 }

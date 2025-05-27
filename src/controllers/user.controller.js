@@ -3,16 +3,30 @@ import jwt from 'jsonwebtoken';
 
 export const register = async (req, res) => {
     try {
-        await createUser(req.body);
-        console.log("User added");
+        const result = await createUser(req.body);
+        
         res.status(201).json({
+            success: true,
             message: 'User registered successfully',
+            userId: result.userId
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server error during registration' });
+        
+        // Handle validation errors separately from other server errors
+        if (error.message.startsWith('Validation failed:')) {
+            return res.status(400).json({
+                success: false,
+                message: error.message
+            });
+        }
+
+        res.status(500).json({ 
+            success: false,
+            message: 'Server error during registration' 
+        });
     }
-}
+};
 
 export const login = async (req, res) => {
     try {
