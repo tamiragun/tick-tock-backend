@@ -17,9 +17,21 @@ export const setupDb = async (connection) => {
         await connection.schema.dropTableIfExists('clients');
         await connection.schema.createTable('clients', table => {
             table.increments('client_id');
-            table.integer('user_id').notNullable();
             table.string('company_name').notNullable();
+            table.integer('user_id').notNullable();
             table.foreign('user_id').references('user_id').inTable('users');
+            table.timestamp('created_at').notNullable();
+        });
+
+        await connection.schema.dropTableIfExists('projects');
+        await connection.schema.createTable('projects', table => {
+            table.increments('project_id');
+            table.string('project_name').notNullable();
+            table.integer('rate').notNullable();
+            table.enu('rate_type', ['hourly', 'fixed']).notNullable();
+            table.enu('status', ['active', 'inactive']).notNullable();
+            table.integer('client_id').notNullable();
+            table.foreign('client_id').references('client_id').inTable('clients');
             table.timestamp('created_at').notNullable();
         });
 
