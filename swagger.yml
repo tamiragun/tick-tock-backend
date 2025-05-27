@@ -13,7 +13,7 @@ paths:
   /users/register:
     post:
       tags:
-        - register
+        - Users
       summary: Add a new user
       description: Create a new user by providing first name, last name, email address, and password.
       operationId: registerUser
@@ -22,18 +22,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserCreate'
       responses:
         '201':
-          description: successful operation
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
         '400':
-          description: Invalid input
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
-          description: Unexpected error
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /users/login:
     post:
       tags:
-        - Authentication
+        - Users
       summary: User login
       description: Authenticate a user with email and password credentials
       operationId: loginUser
@@ -43,17 +56,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/LoginRequest'
-            examples:
-              valid_login:
-                summary: Valid login credentials
-                value:
-                  email: "user@example.com"
-                  password: "securePassword123"
-              invalid_email:
-                summary: Invalid email format
-                value:
-                  email: "invalid-email"
-                  password: "password123"
       responses:
         '200':
           description: Login successful
@@ -61,92 +63,429 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginSuccessResponse'
-              examples:
-                with_token:
-                  summary: Successful login with JWT token
-                  value:
-                    success: true
-                    message: "Login successful"
-                    user:
-                      id: 1
-                      email: "user@example.com"
-                      name: "John Doe"
-                      created_at: "2024-01-15T10:30:00Z"
-                    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                without_token:
-                  summary: Successful login without JWT token
-                  value:
-                    success: true
-                    message: "Login successful"
-                    user:
-                      id: 1
-                      email: "user@example.com"
-                      name: "John Doe"
-                      created_at: "2024-01-15T10:30:00Z"
         '400':
-          description: Bad request - Invalid input
+          description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                missing_fields:
-                  summary: Missing required fields
-                  value:
-                    success: false
-                    message: "Email and password are required"
-                invalid_email:
-                  summary: Invalid email format
-                  value:
-                    success: false
-                    message: "Please provide a valid email address"
         '401':
-          description: Unauthorized - Invalid credentials
+          description: Invalid credentials
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                invalid_credentials:
-                  summary: Invalid email or password
-                  value:
-                    success: false
-                    message: "Invalid email or password"
         '500':
-          description: Internal server error
+          description: Server error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                server_error:
-                  summary: Internal server error
-                  value:
-                    success: false
-                    message: "Internal server error"
+
+  /clients:
+    post:
+      tags:
+        - Clients
+      summary: Create a new client
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientCreate'
+      responses:
+        '201':
+          description: Client created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    get:
+      tags:
+        - Clients
+      summary: Get all clients
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  clients:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Client'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /clients/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Client ID
     
+    get:
+      tags:
+        - Clients
+      summary: Get a client by ID
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags:
+        - Clients
+      summary: Update a client
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientUpdate'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Clients
+      summary: Delete a client
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Client deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /projects:
+    post:
+      tags:
+        - Projects
+      summary: Create a new project
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreate'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    get:
+      tags:
+        - Projects
+      summary: Get all projects
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  projects:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /projects/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Project ID
+
+    get:
+      tags:
+        - Projects
+      summary: Get a project by ID
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags:
+        - Projects
+      summary: Update a project
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Projects
+      summary: Delete a project
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /sessions:
+    post:
+      tags:
+        - Sessions
+      summary: Create a new session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreate'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    get:
+      tags:
+        - Sessions
+      summary: Get all sessions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Session'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /sessions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Session ID
+
+    get:
+      tags:
+        - Sessions
+      summary: Get a session by ID
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags:
+        - Sessions
+      summary: Update a session
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdate'
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Sessions
+      summary: Delete a session
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Session deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
 components:
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    ServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
   schemas:
-    User:
+    UserCreate:
       type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
       properties:
         firstName:
           type: string
-          description: 'The first name of the user'
           example: 'Timi'
         lastName:
           type: string
-          description: 'The last name of the user'
           example: 'Gun'
         email:
           type: string
-          description: 'The email address of the user'
+          format: email
           example: 'timigun@test.com'
         password:
           type: string
-          description: 'The password of the user'
+          format: password
           example: 'tickT0ck#'
-  
+
     LoginRequest:
       type: object
       required:
@@ -156,17 +495,11 @@ components:
         email:
           type: string
           format: email
-          description: User's email address
           example: "user@example.com"
-          minLength: 5
-          maxLength: 255
         password:
           type: string
-          description: User's password
+          format: password
           example: "securePassword123"
-          minLength: 6
-          maxLength: 128
-      additionalProperties: false
 
     LoginSuccessResponse:
       type: object
@@ -177,27 +510,259 @@ components:
       properties:
         success:
           type: boolean
-          description: Indicates if the login was successful
           example: true
         message:
           type: string
-          description: Success message
           example: "Login successful"
         user:
-          $ref: '#/components/schemas/User'
+          type: object
+          properties:
+            id:
+              type: integer
+            email:
+              type: string
+            firstName:
+              type: string
+            lastName:
+              type: string
+            created_at:
+              type: string
+              format: date-time
         token:
           type: string
-          description: JWT token (optional, only if JWT_SECRET is configured)
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      additionalProperties: false
+          description: JWT token (if JWT_SECRET is configured)
+
+    ClientCreate:
+      type: object
+      required:
+        - company_name
+        - user_id
+      properties:
+        company_name:
+          type: string
+          example: "Acme Corp"
+        user_id:
+          type: integer
+          example: 1
+
+    ClientUpdate:
+      type: object
+      required:
+        - company_name
+      properties:
+        company_name:
+          type: string
+          example: "Acme Corporation"
+
+    Client:
+      type: object
+      properties:
+        client_id:
+          type: integer
+        company_name:
+          type: string
+        user_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ClientResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        clientId:
+          type: integer
+        client:
+          $ref: '#/components/schemas/Client'
+
+    ProjectCreate:
+      type: object
+      required:
+        - project_name
+        - rate
+        - rate_type
+        - client_id
+      properties:
+        project_name:
+          type: string
+          example: "Website Redesign"
+        rate:
+          type: number
+          format: float
+          example: 75.50
+        rate_type:
+          type: string
+          enum: [hourly, fixed]
+          example: "hourly"
+        client_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: [active, inactive]
+          default: "active"
+
+    ProjectUpdate:
+      type: object
+      properties:
+        project_name:
+          type: string
+        rate:
+          type: number
+          format: float
+        rate_type:
+          type: string
+          enum: [hourly, fixed]
+        status:
+          type: string
+          enum: [active, inactive]
+
+    Project:
+      type: object
+      properties:
+        project_id:
+          type: integer
+        project_name:
+          type: string
+        rate:
+          type: number
+          format: float
+        rate_type:
+          type: string
+          enum: [hourly, fixed]
+        status:
+          type: string
+          enum: [active, inactive]
+        client_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    ProjectResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        projectId:
+          type: integer
+        project:
+          $ref: '#/components/schemas/Project'
+
+    SessionCreate:
+      type: object
+      required:
+        - started_at
+        - project_id
+      properties:
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+        project_id:
+          type: integer
+
+    SessionUpdate:
+      type: object
+      properties:
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      properties:
+        session_id:
+          type: integer
+        started_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in seconds
+        project_id:
+          type: integer
+        project_name:
+          type: string
+        client_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    SessionResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        sessionId:
+          type: integer
+        session:
+          $ref: '#/components/schemas/Session'
+
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error message here"
 
   securitySchemes:
-      BearerAuth:
-        type: http
-        scheme: bearer
-        bearerFormat: JWT
-        description: JWT token obtained from login endpoint
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
 
 tags:
-  - name: Authentication
-    description: User authentication operations
+  - name: Users
+    description: User management and authentication
+  - name: Clients
+    description: Client management operations
+  - name: Projects
+    description: Project management operations
+  - name: Sessions
+    description: Time tracking session operations
