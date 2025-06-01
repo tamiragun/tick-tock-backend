@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { setupDb } from "../data/db.js";
 import knex from 'knex';
 import app from './app.js';

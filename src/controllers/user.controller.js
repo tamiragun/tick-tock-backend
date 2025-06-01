@@ -71,7 +71,7 @@ export const login = async (req, res) => {
           { expiresIn: '24h' }
         );
       }
-  
+      
       // Successful login response
       const response = {
         success: true,
