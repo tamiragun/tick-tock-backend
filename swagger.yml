@@ -3,6 +3,12 @@ info:
   title: Tick-Tock
   description: |-
     This is an API that interacts with the user-facing app of Tick Tock.
+    
+    All request and response fields use camelCase naming convention.
+    For example:
+    - companyName instead of company_name
+    - projectId instead of project_id
+    - startedAt instead of started_at
   version: 1.0.12
 servers:
   - url: http://localhost:3000/api
@@ -473,18 +479,22 @@ components:
       properties:
         firstName:
           type: string
-          example: 'Timi'
+          example: 'John'
+          description: User's first name
         lastName:
           type: string
-          example: 'Gun'
+          example: 'Doe'
+          description: User's last name
         email:
           type: string
           format: email
-          example: 'timigun@test.com'
+          example: 'john.doe@example.com'
+          description: User's email address
         password:
           type: string
           format: password
-          example: 'tickT0ck#'
+          example: 'secureP@ssw0rd'
+          description: User's password (min 8 characters)
 
     LoginRequest:
       type: object
@@ -495,11 +505,13 @@ components:
         email:
           type: string
           format: email
-          example: "user@example.com"
+          example: "john.doe@example.com"
+          description: User's email address
         password:
           type: string
           format: password
-          example: "securePassword123"
+          example: "secureP@ssw0rd"
+          description: User's password
 
     LoginSuccessResponse:
       type: object
@@ -519,53 +531,70 @@ components:
           properties:
             id:
               type: integer
+              example: 1
             email:
               type: string
+              example: "john.doe@example.com"
             firstName:
               type: string
+              example: "John"
             lastName:
               type: string
-            created_at:
+              example: "Doe"
+            createdAt:
               type: string
               format: date-time
+              example: "2024-03-14T12:00:00Z"
         token:
           type: string
           description: JWT token (if JWT_SECRET is configured)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
     ClientCreate:
       type: object
       required:
-        - company_name
-        - user_id
+        - companyName
+        - userId
       properties:
-        company_name:
+        companyName:
           type: string
           example: "Acme Corp"
-        user_id:
+          description: Name of the company
+        userId:
           type: integer
           example: 1
+          description: ID of the user who owns this client
 
     ClientUpdate:
       type: object
       required:
-        - company_name
+        - companyName
       properties:
-        company_name:
+        companyName:
           type: string
           example: "Acme Corporation"
+          description: Updated name of the company
 
     Client:
       type: object
       properties:
-        client_id:
+        clientId:
           type: integer
-        company_name:
+          example: 1
+          description: Unique identifier for the client
+        companyName:
           type: string
-        user_id:
+          example: "Acme Corp"
+          description: Name of the company
+        userId:
           type: integer
-        created_at:
+          example: 1
+          description: ID of the user who owns this client
+        createdAt:
           type: string
           format: date-time
+          example: "2024-03-14T12:00:00Z"
+          description: Timestamp when the client was created
 
     ClientResponse:
       type: object
@@ -575,76 +604,102 @@ components:
       properties:
         success:
           type: boolean
+          example: true
         message:
           type: string
+          example: "Client operation successful"
         clientId:
           type: integer
+          example: 1
         client:
           $ref: '#/components/schemas/Client'
 
     ProjectCreate:
       type: object
       required:
-        - project_name
+        - projectName
         - rate
-        - rate_type
-        - client_id
+        - rateType
+        - clientId
       properties:
-        project_name:
+        projectName:
           type: string
           example: "Website Redesign"
+          description: Name of the project
         rate:
           type: number
           format: float
           example: 75.50
-        rate_type:
+          description: Project rate (per hour or fixed)
+        rateType:
           type: string
           enum: [hourly, fixed]
           example: "hourly"
-        client_id:
+          description: Type of rate (hourly or fixed)
+        clientId:
           type: integer
           example: 1
+          description: ID of the client this project belongs to
         status:
           type: string
           enum: [active, inactive]
           default: "active"
+          description: Project status
 
     ProjectUpdate:
       type: object
       properties:
-        project_name:
+        projectName:
           type: string
+          description: Updated name of the project
         rate:
           type: number
           format: float
-        rate_type:
+          description: Updated project rate
+        rateType:
           type: string
           enum: [hourly, fixed]
+          description: Updated rate type
         status:
           type: string
           enum: [active, inactive]
+          description: Updated project status
 
     Project:
       type: object
       properties:
-        project_id:
+        projectId:
           type: integer
-        project_name:
+          example: 1
+          description: Unique identifier for the project
+        projectName:
           type: string
+          example: "Website Redesign"
+          description: Name of the project
         rate:
           type: number
           format: float
-        rate_type:
+          example: 75.50
+          description: Project rate
+        rateType:
           type: string
           enum: [hourly, fixed]
+          example: "hourly"
+          description: Type of rate
         status:
           type: string
           enum: [active, inactive]
-        client_id:
+          example: "active"
+          description: Project status
+        clientId:
           type: integer
-        created_at:
+          example: 1
+          description: ID of the client this project belongs to
+        createdAt:
           type: string
           format: date-time
+          example: "2024-03-14T12:00:00Z"
+          description: Timestamp when the project was created
 
     ProjectResponse:
       type: object
@@ -654,61 +709,87 @@ components:
       properties:
         success:
           type: boolean
+          example: true
         message:
           type: string
+          example: "Project operation successful"
         projectId:
           type: integer
+          example: 1
         project:
           $ref: '#/components/schemas/Project'
 
     SessionCreate:
       type: object
       required:
-        - started_at
-        - project_id
+        - startedAt
+        - projectId
       properties:
-        started_at:
+        startedAt:
           type: string
           format: date-time
-        ended_at:
+          example: "2024-03-14T09:00:00Z"
+          description: When the session started
+        endedAt:
           type: string
           format: date-time
-        project_id:
+          example: "2024-03-14T17:00:00Z"
+          description: When the session ended (optional)
+        projectId:
           type: integer
+          example: 1
+          description: ID of the project this session belongs to
 
     SessionUpdate:
       type: object
       properties:
-        started_at:
+        startedAt:
           type: string
           format: date-time
-        ended_at:
+          description: Updated session start time
+        endedAt:
           type: string
           format: date-time
+          description: Updated session end time
 
     Session:
       type: object
       properties:
-        session_id:
+        sessionId:
           type: integer
-        started_at:
+          example: 1
+          description: Unique identifier for the session
+        startedAt:
           type: string
           format: date-time
-        ended_at:
+          example: "2024-03-14T09:00:00Z"
+          description: When the session started
+        endedAt:
           type: string
           format: date-time
+          example: "2024-03-14T17:00:00Z"
+          description: When the session ended
         duration:
           type: integer
-          description: Duration in seconds
-        project_id:
+          example: 28800
+          description: Duration in seconds (automatically calculated)
+        projectId:
           type: integer
-        project_name:
+          example: 1
+          description: ID of the project this session belongs to
+        projectName:
           type: string
-        client_name:
+          example: "Website Redesign"
+          description: Name of the project (included for convenience)
+        clientName:
           type: string
-        created_at:
+          example: "Acme Corp"
+          description: Name of the client (included for convenience)
+        createdAt:
           type: string
           format: date-time
+          example: "2024-03-14T09:00:00Z"
+          description: Timestamp when the session was created
 
     SessionResponse:
       type: object
@@ -718,10 +799,13 @@ components:
       properties:
         success:
           type: boolean
+          example: true
         message:
           type: string
+          example: "Session operation successful"
         sessionId:
           type: integer
+          example: 1
         session:
           $ref: '#/components/schemas/Session'
 
@@ -749,7 +833,7 @@ components:
           example: false
         message:
           type: string
-          example: "Error message here"
+          example: "Error message"
 
   securitySchemes:
     BearerAuth:

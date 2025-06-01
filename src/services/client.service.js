@@ -1,4 +1,5 @@
 import knex from 'knex';
+import { convertKeysToSnakeCase, convertKeysToCamelCase } from '../utils/case-converter.js';
 
 let connection;
 const config = {
@@ -12,7 +13,7 @@ connection = knex(config);
 
 // Schema validation helper
 const validateUpdateData = (data) => {
-  const allowedFields = ['company_name'];
+  const allowedFields = ['companyName'];
   const errors = [];
 
   // Check for invalid fields
@@ -22,12 +23,12 @@ const validateUpdateData = (data) => {
     }
   });
 
-  // Validate company_name if provided
-  if (data.company_name !== undefined) {
-    if (typeof data.company_name !== 'string') {
-      errors.push('company_name must be a string');
-    } else if (data.company_name.trim() === '') {
-      errors.push('company_name cannot be empty');
+  // Validate companyName if provided
+  if (data.companyName !== undefined) {
+    if (typeof data.companyName !== 'string') {
+      errors.push('companyName must be a string');
+    } else if (data.companyName.trim() === '') {
+      errors.push('companyName cannot be empty');
     }
   }
 
@@ -41,20 +42,20 @@ const validateUpdateData = (data) => {
 const validateCreateData = (data) => {
   const errors = [];
 
-  // Validate user_id
-  if (!data.user_id) {
-    errors.push('user_id is required');
-  } else if (!Number.isInteger(data.user_id)) {
-    errors.push('user_id must be an integer');
+  // Validate userId
+  if (!data.userId) {
+    errors.push('userId is required');
+  } else if (!Number.isInteger(data.userId)) {
+    errors.push('userId must be an integer');
   }
 
-  // Validate company_name
-  if (!data.company_name) {
-    errors.push('company_name is required');
-  } else if (typeof data.company_name !== 'string') {
-    errors.push('company_name must be a string');
-  } else if (data.company_name.trim() === '') {
-    errors.push('company_name cannot be empty');
+  // Validate companyName
+  if (!data.companyName) {
+    errors.push('companyName is required');
+  } else if (typeof data.companyName !== 'string') {
+    errors.push('companyName must be a string');
+  } else if (data.companyName.trim() === '') {
+    errors.push('companyName cannot be empty');
   }
 
   return {
@@ -71,11 +72,13 @@ export const createClient = async (userData) => {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    const [result] = await connection('clients').insert({
-      user_id: userData.user_id,
-      company_name: userData.company_name.trim(),
-      created_at: new Date()
-    }).returning('client_id');
+    const dataToInsert = convertKeysToSnakeCase({
+      userId: userData.userId,
+      companyName: userData.companyName.trim(),
+      createdAt: new Date()
+    });
+
+    const [result] = await connection('clients').insert(dataToInsert).returning('client_id');
 
     return { success: true, clientId: result.client_id };
   } catch (error) {
@@ -86,7 +89,7 @@ export const createClient = async (userData) => {
 export const getAllClients = async () => {
   try {
     const clients = await connection('clients').select('*');
-    return clients;
+    return convertKeysToCamelCase(clients);
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);
   }
@@ -97,7 +100,7 @@ export const getClientById = async (clientId) => {
     const client = await connection('clients')
       .where('client_id', clientId)
       .first();
-    return client;
+    return client ? convertKeysToCamelCase(client) : null;
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);
   }
@@ -106,7 +109,7 @@ export const getClientById = async (clientId) => {
 export const updateClient = async (clientId, updateData) => {
   try {
     // Remove system-managed fields if they exist
-    const { user_id, client_id, created_at, ...allowedUpdates } = updateData;
+    const { userId, clientId: id, createdAt, ...allowedUpdates } = updateData;
 
     // Validate the update data
     const validation = validateUpdateData(allowedUpdates);
@@ -114,9 +117,10 @@ export const updateClient = async (clientId, updateData) => {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
     
+    const snakeCaseUpdates = convertKeysToSnakeCase(allowedUpdates);
     const updated = await connection('clients')
       .where('client_id', clientId)
-      .update(allowedUpdates);
+      .update(snakeCaseUpdates);
     return updated > 0;
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);

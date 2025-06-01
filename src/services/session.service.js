@@ -1,4 +1,5 @@
 import knex from 'knex';
+import { convertKeysToSnakeCase, convertKeysToCamelCase } from '../utils/case-converter.js';
 
 let connection;
 const config = {
@@ -12,28 +13,28 @@ connection = knex(config);
 
 // Validation rules that can be reused
 const validationRules = {
-  started_at: {
+  startedAt: {
     required: true,
     validate: (value) => {
       if (!(value instanceof Date) && !isValidISOString(value)) {
-        return 'started_at must be a valid date';
+        return 'startedAt must be a valid date';
       }
       
       const startDate = new Date(value);
       const now = new Date();
       
       if (startDate > now) {
-        return 'started_at cannot be in the future';
+        return 'startedAt cannot be in the future';
       }
       
       return null;
     }
   },
-  ended_at: {
+  endedAt: {
     required: false,
     validate: (value, data) => {
       if (value && !(value instanceof Date) && !isValidISOString(value)) {
-        return 'ended_at must be a valid date';
+        return 'endedAt must be a valid date';
       }
 
       if (value) {
@@ -41,13 +42,13 @@ const validationRules = {
         const now = new Date();
         
         if (endDate > now) {
-          return 'ended_at cannot be in the future';
+          return 'endedAt cannot be in the future';
         }
 
-        if (data.started_at) {
-          const startDate = new Date(data.started_at);
+        if (data.startedAt) {
+          const startDate = new Date(data.startedAt);
           if (endDate < startDate) {
-            return 'ended_at must be after started_at';
+            return 'endedAt must be after startedAt';
           }
         }
       }
@@ -64,10 +65,10 @@ const validationRules = {
       return null;
     }
   },
-  project_id: {
+  projectId: {
     required: true,
     validate: (value) => {
-      if (!Number.isInteger(value)) return 'project_id must be an integer';
+      if (!Number.isInteger(value)) return 'projectId must be an integer';
       return null;
     }
   }
@@ -134,12 +135,12 @@ export const createSession = async (sessionData) => {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    const dataToInsert = {
+    const dataToInsert = convertKeysToSnakeCase({
       ...sessionData,
-      created_at: new Date()
-    };
+      createdAt: new Date()
+    });
 
-    // Calculate duration if ended_at is provided
+    // Calculate duration if endedAt is provided
     if (dataToInsert.ended_at) {
       const startDate = new Date(dataToInsert.started_at);
       const endDate = new Date(dataToInsert.ended_at);
@@ -165,7 +166,7 @@ export const getAllSessions = async () => {
       .leftJoin('projects', 'sessions.project_id', 'projects.project_id')
       .leftJoin('clients', 'projects.client_id', 'clients.client_id')
       .orderBy('sessions.started_at', 'desc');
-    return sessions;
+    return convertKeysToCamelCase(sessions);
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);
   }
@@ -183,7 +184,7 @@ export const getSessionById = async (sessionId) => {
       .leftJoin('clients', 'projects.client_id', 'clients.client_id')
       .where('sessions.session_id', sessionId)
       .first();
-    return session;
+    return session ? convertKeysToCamelCase(session) : null;
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);
   }
@@ -192,7 +193,7 @@ export const getSessionById = async (sessionId) => {
 export const updateSession = async (sessionId, updateData) => {
   try {
     // Remove system-managed fields if they exist
-    const { session_id, created_at, ...allowedUpdates } = updateData;
+    const { sessionId: id, createdAt, ...allowedUpdates } = updateData;
 
     // Validate the update data
     const validation = validateUpdateData(allowedUpdates);
@@ -200,21 +201,22 @@ export const updateSession = async (sessionId, updateData) => {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
     }
 
-    // If ended_at is being updated, recalculate duration
-    if (allowedUpdates.ended_at) {
+    // If endedAt is being updated, recalculate duration
+    if (allowedUpdates.endedAt) {
       const session = await getSessionById(sessionId);
       if (!session) {
         throw new Error('Session not found');
       }
 
-      const startDate = new Date(session.started_at);
-      const endDate = new Date(allowedUpdates.ended_at);
+      const startDate = new Date(session.startedAt);
+      const endDate = new Date(allowedUpdates.endedAt);
       allowedUpdates.duration = Math.floor((endDate - startDate) / 1000); // Duration in seconds
     }
     
+    const snakeCaseUpdates = convertKeysToSnakeCase(allowedUpdates);
     const updated = await connection('sessions')
       .where('session_id', sessionId)
-      .update(allowedUpdates);
+      .update(snakeCaseUpdates);
     return updated > 0;
   } catch (error) {
     throw new Error(`Database error: ${error.message}`);

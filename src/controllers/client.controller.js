@@ -2,9 +2,9 @@ import { createClient, getAllClients, getClientById, updateClient, deleteClient 
 
 export const create = async (req, res) => {
     try {
-        const { user_id, company_name } = req.body;
+        const { userId, companyName } = req.body;
         
-        const result = await createClient({ user_id, company_name });
+        const result = await createClient({ userId, companyName });
         res.status(201).json({
             success: true,
             message: 'Client created successfully',
