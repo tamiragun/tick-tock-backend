@@ -1,5 +1,6 @@
 import knex from 'knex';
 import bcrypt from 'bcrypt';
+import { convertKeysToCamelCase } from '../utils/case-converter.js';
 
 let connection;
 const config = {
@@ -127,7 +128,7 @@ export const authenticateUser = async (email, password) => {
     return { 
       success: true, 
       message: 'Login successful',
-      user: userWithoutPassword 
+      user: convertKeysToCamelCase(userWithoutPassword)
     };
   } catch (error) {
     throw new Error(`Authentication error: ${error.message}`);
